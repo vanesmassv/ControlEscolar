@@ -54,63 +54,85 @@ class CalificarAlumno {
         };
     }
     
-    async asignarCalificacion(Calificacion, observaciones, alumnoid, materiaid, usuarioId){
-        // 1. Validar alumno
-        const alumno = await models.Alumnos.findByPk(alumnoid);
-        if (!alumno) {
-            throw new NotFoundError('Alumno no encontrado');
-        }
+    async asignarCalificacionPorGrupo(Calificacion, observaciones, alumnoid, materiaid, usuarioId){
+    // 1. Validar maestro
+    const maestroProfile = await models.Maestros.findOne({ 
+        where: { usuario_id: usuarioId },
+        include: [{
+            model: models.Grupo,
+            as: 'grupo',
+            include: [{
+                model: models.Alumnos,
+                as: 'alumnos'
+            }]
+        }]
+    });
+    
+    if (!maestroProfile) {
+        throw new UnauthorizedError('Perfil de Maestro no encontrado.');
+    }
 
-        // 2. Validar maestro
-        const maestroProfile = await models.Maestros.findOne({ 
-            where: { usuario_id: usuarioId } 
-        });
-        if (!maestroProfile) {
-            throw new UnauthorizedError('Perfil de Maestro no encontrado.');
-        }
+    // 2. Validar que el maestro tenga un grupo asignado
+    if (!maestroProfile.grupo) {
+        throw new UnauthorizedError('No tienes un grupo asignado.');
+    }
 
-        // 3. Validar materia
-        const materia = await models.Materias.findByPk(materiaid);
-        if (!materia) {
-            throw new NotFoundError('Materia no encontrada');
+    // 3. Validar que el alumno existe y pertenece al grupo del maestro
+    const alumno = await models.Alumnos.findOne({
+        where: { 
+            id: alumnoid,
+            grupo_id: maestroProfile.grupo.id  
         }
+    });
+    
+    if (!alumno) {
+        throw new UnauthorizedError('El alumno no pertenece a tu grupo o no existe.');
+    }
 
-        if (materia.maestro_id !== maestroProfile.id) {
-            throw new UnauthorizedError('No tienes permiso para calificar alumnos en esta materia.');
+    // 4. Validar materia (que sea del maestro)
+    const materia = await models.Materias.findOne({
+        where: {
+            id: materiaid,
+            maestro_id: maestroProfile.id  // ← Solo sus materias
         }
+    });
+    
+    if (!materia) {
+        throw new UnauthorizedError('La materia no existe o no es tuya.');
+    }
 
-        // 4. Validar rango
-        if (Calificacion < 0 || Calificacion > 10) {
-            throw new BadRequestError('La calificación debe estar entre 0 y 10');
+    // 5. Validar rango
+    if (Calificacion < 0 || Calificacion > 10) {
+        throw new BadRequestError('La calificación debe estar entre 0 y 10');
+    }
+    
+    // 6. Verificar si ya existe
+    const calificacionExistente = await models.Calificaciones.findOne({
+        where: {
+            alumno_id: alumnoid,
+            materia_id: materiaid
         }
-        
-        //  Verificar si ya existe (ANTES de crear)
-        const calificacionExistente = await models.Calificaciones.findOne({
-            where: {
-                alumno_id: alumnoid,
-                materia_id: materiaid
-            }
-        });
+    });
 
-        if (calificacionExistente) {
-            throw new BadRequestError(
-                'Este alumno ya tiene una calificación en esta materia. ' +
-                'Usa la opción de editar para modificarla.'
-            );
-        }
+    if (calificacionExistente) {
+        throw new BadRequestError(
+            'Este alumno ya tiene una calificación en esta materia. ' +
+            'Usa la opción de editar para modificarla.'
+        );
+    }
 
-        //  Crear calificación (solo si no existe)
-        const newCalificacion = await models.Calificaciones.create({
-            alumno_id: alumnoid,   
-            materia_id: materiaid, 
-            nota: Calificacion, 
-            maestro_id: maestroProfile.id,
-            fecha_registro: new Date(),
-            observaciones: observaciones || ''
-        });
+    // 7. Crear calificación
+    const newCalificacion = await models.Calificaciones.create({
+        alumno_id: alumnoid,   
+        materia_id: materiaid, 
+        nota: Calificacion, 
+        maestro_id: maestroProfile.id,
+        fecha_registro: new Date(),
+        observaciones: observaciones || ''
+    });
 
         return newCalificacion;
-    } 
+    }
 
     async editarCalificacion(Calificacion, observaciones, calificacion_id, usuarioId){ 
         const maestroProfile = await models.Maestros.findOne({ 
