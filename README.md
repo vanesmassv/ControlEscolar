@@ -85,6 +85,3 @@ Abre en tu navegador:
 
 ------------------------------------------------------------------------
 
-## Notas
-Debes de adaptar el .env a tu postgresql dependiendo la configuracion que tengas como puerto, contraseña, etc.
-
