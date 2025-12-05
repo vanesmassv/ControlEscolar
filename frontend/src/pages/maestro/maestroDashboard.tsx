@@ -16,14 +16,14 @@ const MaestroDashboard = () => {
             </Link>
             
             <Link 
-                to="registrar" 
+                to="registrar-calificacion" 
                 className="block text-black bg-blue-400 py-2 px-3 rounded-md transition duration-300 hover:bg-indigo-700 hover:text-white"
             >
                 Registrar calificación
             </Link>
 
             <Link 
-                to="editar" 
+                to="editar-calificacion" 
                 className="block text-black bg-blue-400 py-2 px-3 rounded-md transition duration-300 hover:bg-indigo-700 hover:text-white"
             >
                 Editar calificaciones

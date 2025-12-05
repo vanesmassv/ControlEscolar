@@ -2,8 +2,19 @@ export interface Usuario {
   id: string;
   nombre: string;
   email: string;
-  rol: 'ADMIN' | 'MAESTRO';
+  rol: 'ADMIN' | 'MAESTRO' | 'CONTROL_ESCOLAR';
 }
+
+export type LoginCredentials = {
+    email: string;
+    password: string;
+}
+
+export type LoginResponseData = {
+    token: string;
+    user: Usuario; 
+};
+
 
 export interface Alumno {
   id: number;
@@ -54,15 +65,16 @@ export interface Grupo {
 
 
 export interface Calificacion {
-  id: number;
-  alumno_id: number;
-  nota: string;  
-  observaciones?: string;
-  materia: {
     id: number;
-    nombre: string;
-    codigo?: string;
-  };
+    nota: number;
+    observaciones: string;
+    fecha_registro: Date;
+    // Relaciones para el reporte global (si las anidas)
+    alumno?: {
+        id: number;
+        nombre: string;
+    } | undefined;
+    materia?: Materia | undefined;
 }
 
 export interface Maestro {
@@ -113,3 +125,36 @@ export interface RespuestaCrearCalificacion {
   message: string;
   data: Calificacion;
 }
+
+export type DetalleReporteAdmin = {
+    alumno: string;
+    matricula: string;
+    materia: string;
+    promedio: string; 
+};
+
+
+export type ReporteGlobalData = {
+    promedioGeneral: string;
+    resumenPorMateria: { materia: string; promedio: string; }[];
+    detallesPorAlumnoYMateria: DetalleReporteAdmin[]; 
+};
+
+
+export type ReporteGlobalResponse = {
+    promedioGeneral: string;
+    resumenPorMateria: {
+        materia: string;
+        promedio: string;
+    }[];
+    detallesPorAlumnoYMateria: DetalleReporteAdmin[]; 
+};
+
+// 3. Tipo de la respuesta final de la API (con envoltorio 'succes' y 'message')
+export type RespuestaReporteGlobal = {
+    succes: boolean;
+    message: string;
+    data: ReporteGlobalResponse;
+};
+
+

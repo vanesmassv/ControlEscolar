@@ -1,16 +1,25 @@
-import  loginService  from '../services/loginService.js'
-import AppError from '../errors/AppError.js';
+import LoginService from '../services/loginService.js';
 
-export const Login = async(req, res) => {
-    try{
-        //declaracion de campos a utilizar
-        const { email, password } = req.body;
-        const { token, usuario } = await loginService.autenticarUsuario({email,password});
-        return res.status(200).json({ ok: true, data: { token, usuario } });
-    }catch(error){
-        if (error instanceof AppError) return res.status(error.status).json({ error: error.message });
-        return res.status(400).json({ error: error.message });
-    }
-}
-
-export default Login;
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    
+    const { token, user } = await LoginService.autenticarUsuario({ email, password });
+    
+    // ✅ Estructura de respuesta
+    res.json({
+      ok: true,
+      data: {
+        token,
+        user: {
+          id: String(user.id),
+          email: user.email,
+          nombre: user.nombre,
+          rol: user.rol  
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

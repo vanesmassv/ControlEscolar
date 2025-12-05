@@ -15,6 +15,11 @@ export const calificacionService = {
         // Endpoint: PUT /calificaciones/{id}
         const response = await api.put<{ message: string, calificacion: Calificacion }>(`/calificaciones/${id}`, payload); 
         return response.data;
+    },
+
+  async eliminarCalificacion(id: number): Promise<{ message: string }> {
+        const response = await api.delete<{ message: string }>(`/admin/calificacion/${id}`); 
+        return response.data;
     }
 };
 

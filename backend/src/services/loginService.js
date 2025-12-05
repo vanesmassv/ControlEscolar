@@ -5,12 +5,15 @@ import { JWT_SECRET } from "../database/env.js";
 import NotFoundError from '../errors/NotFoundError.js';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
 
-
-
-
 export const findUserByEmail = async (email) => {
     return await models.Usuarios.findOne({ 
-        where: { email },});
+        where: { email },
+        include: [{
+            model: models.Rol,
+            as: 'rol',
+            attributes: ['id', 'nombre']
+        }]
+    });
 };
 
 export const hashedPassword = async (password) => {
@@ -21,28 +24,60 @@ export const verifyPassword = async(password, passwordHash) => {
     return bcrypt.compare(password, passwordHash);
 }
 
-export const getRoles = async(id) => {
-    return await models.Usuarios.findAll({ where: { id } });
-}
-
 class LoginService {
     async findById(id) {
-        return models.Usuarios.findOne({ where: { id: id } });
+        return models.Usuarios.findOne({ 
+            where: { id: id },
+            include: [{
+                model: models.Rol,
+                as: 'rol',
+                attributes: ['id', 'nombre']
+            }]
+        });
     }
 
     async autenticarUsuario({ email, password }) {
         const user = await findUserByEmail(email);
-        if (!user) throw new NotFoundError('No existe un usuario con ese correo');
-        const roles = await getRoles(user.id);
+        
+        if (!user) {
+            throw new NotFoundError('No existe un usuario con ese correo');
+        }
+
         const verified = await verifyPassword(password, user.password_hash);
-        if (!verified) throw new UnauthorizedError('Contraseña incorrecta');
-        const token = jwt.sign({ id: user.id, email: user.email, roles: [roles] }, JWT_SECRET, {
-            expiresIn: '30m',
-        });
+        
+        if (!verified) {
+            throw new UnauthorizedError('Contraseña incorrecta');
+        }
+
+        // ✅ CORRECCIÓN: Extraer el nombre del rol correctamente
+        const rolNombre = user.rol?.nombre || 'USUARIO';
+
+        console.log('=== DEBUG LOGIN ===');
+        console.log('user.rol:', user.rol);
+        console.log('rolNombre extraído:', rolNombre);
+        console.log('==================');
+
+        // ✅ CORRECCIÓN: Generar token con el rol como STRING
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                email: user.email, 
+                rol: rolNombre  // ← Solo el nombre como string
+            }, 
+            JWT_SECRET,
+            { expiresIn: '30m' }
+        );
+
         const { password_hash: _, ...response } = user.toJSON();
-        return { token, user: response };
+        
+        return { 
+            token, 
+            user: {
+                ...response,
+                rol: rolNombre
+            }
+        };
     }
 }
 
 export default new LoginService();
-

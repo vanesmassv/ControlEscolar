@@ -4,9 +4,8 @@ export interface LoginCredentials {
 }
 
 export interface LoginResponse {
-  data: {
     token: string;
-  };
+    user: Usuario;
 }
 
 export interface DecodedToken {
@@ -22,5 +21,5 @@ export interface Usuario {
   id: string;
   email: string;
   nombre: string;
-  rol: 'ADMIN' | 'MAESTRO';
+  rol: 'ADMIN' | 'MAESTRO' | 'CONTROL_ESCOLAR';
 }

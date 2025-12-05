@@ -21,13 +21,6 @@ app.use('/api/alumno',alumnoRoutes);
 app.use('/api/maestros', maestroRoutes);
 app.use('/api/admin', adminRoutes);
 
-/*
-
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/alumnos', alumnoRoutes);
-app.use('/api/materias', materiasRouter);
-*/
 
 
 export default app;

@@ -1,6 +1,5 @@
-// src/presentation/components/auth/ProtectedRoute.tsx
+// src/routes/ProtectedRoute.tsx (o donde lo tengas)
 import { Navigate, Outlet } from 'react-router-dom';
-import useAuth  from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
   allowedRole?: string;
@@ -11,16 +10,30 @@ const ProtectedRoute = ({
   allowedRole, 
   redirectTo = '/' 
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, hasRole } = useAuth();
+  // Verificar autenticación
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
 
-  if (!isAuthenticated) {
+  console.log('🔒 ProtectedRoute - Token:', token ? 'Existe' : 'No existe');
+  console.log('🔒 ProtectedRoute - User:', userStr);
+
+  if (!token) {
+    console.log('❌ No hay token, redirigiendo a:', redirectTo);
     return <Navigate to={redirectTo} replace />;
   }
 
-  if (allowedRole && !hasRole(allowedRole)) {
-    return <Navigate to="/unauthorized" replace />;
+  // Verificar rol si es necesario
+  if (allowedRole && userStr) {
+    const user = JSON.parse(userStr);
+    console.log('🔒 Verificando rol:', user.rol, 'vs', allowedRole);
+
+    if (user.rol !== allowedRole) {
+      console.log('❌ Rol no autorizado, redirigiendo a /unauthorized');
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
+  console.log('✅ Acceso permitido');
   return <Outlet />;
 };
 

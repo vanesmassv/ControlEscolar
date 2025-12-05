@@ -7,7 +7,7 @@ import auth from '../middleware/auth.js';
 
 const router = Router();
 
-router.post('/calificacion', 
+router.post('/calificaciones', 
     auth,
     [
         body('alumnoid') 
@@ -33,10 +33,11 @@ router.post('/calificacion',
     asignarCalificacion
 );
 
+//ruta para actualizar por id calificacion
 router.patch('/calificacion/:id',auth,[body('Calificacion').notEmpty().withMessage('la calificacion es requerida').isFloat({min: 0, max: 10}).withMessage('La calificacion debe de estar entre 10 y 0'),
     body('observaciones').optional().isString().withMessage('texto')],validateRequest,editarCalificacion);
 
 
-router.get('/misalumnos',auth, obtenerAlumnos);    
+router.get('/misalumnos',auth, obtenerAlumnos);
 
 export default router;

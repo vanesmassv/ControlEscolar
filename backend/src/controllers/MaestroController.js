@@ -2,23 +2,27 @@ import CalificarAlumno from '../services/MaestroService.js'
 
 
 export const asignarCalificacion = async (req, res, next) => {
-        try{
-            const { alumnoid, materiaid, Calificacion, observaciones} = req.body;
-            const usuarioId = req.user.id;
+    try {
+        const usuarioId = req.user.id; // Del middleware auth
+        const { alumnoid, materiaid, Calificacion, observaciones } = req.body;
 
-            const data = await CalificarAlumno.asignarCalificacion(
-                Calificacion, observaciones, alumnoid, materiaid, usuarioId
-            );
+        const nuevaCalificacion = await CalificarAlumno.asignarCalificacionPorGrupo(
+            Calificacion,
+            observaciones,
+            alumnoid,
+            materiaid,
+            usuarioId
+        );
 
-            res.status(201).json({
-                succes: true,
-                message: 'Calificacion asignada exitosamente',
-                data: data
-            });
-        }catch(error){
-            next(error);
-        }
+        res.status(201).json({
+            success: true,
+            message: 'Calificación asignada exitosamente',
+            data: nuevaCalificacion
+        });
+    } catch (error) {
+        next(error);
     }
+};
 
 export const editarCalificacion = async (req, res, next) => {
         try{
@@ -40,7 +44,8 @@ export const editarCalificacion = async (req, res, next) => {
         }catch(error){
             next(error);
         }
-    }
+    
+};
 
 export const obtenerAlumnos = async(req, res, next) => {
     try{
@@ -56,7 +61,7 @@ export const obtenerAlumnos = async(req, res, next) => {
         console.error("Fallo al obtener alumnos:", error);
         next(error);
     }
-}   
+};   
 
 
 export default { editarCalificacion, asignarCalificacion, obtenerAlumnos};

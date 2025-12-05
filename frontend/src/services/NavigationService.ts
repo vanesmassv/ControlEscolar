@@ -3,9 +3,9 @@ import type { Usuario } from '../domain/entities/auth';
 export class NavigationService {
   getRedirectPath(user: Usuario): string {
     const routeMap: Record<string, string> = {
-      'ADMIN': '/admin/dashboard',
+      'ADMIN': '/admin',
       'MAESTRO': '/maestro/dashboard',
-      'ALUMNO': '/alumno/dashboard'
+      
     };
 
     const path = routeMap[user.rol];

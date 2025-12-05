@@ -1,40 +1,57 @@
 import type { AuthRepository } from '../repositories/AuthRepository';
-import type { LoginCredentials } from '../entities/auth';
 import { TokenService } from '../../services/TokenService';
-import { NavigationService } from '../../services/NavigationService';
+// Quitamos NavigationService porque ya no lo usamos aquí
+import type { Usuario, LoginCredentials } from '../../types'; 
+
+// Definimos una interfaz para evitar el error de "Unexpected any"
+interface LoginResponse {
+  token?: string;
+  data?: {
+    token?: string;
+  };
+  user?: Usuario;
+}
 
 export class LoginUseCase {
   private authRepository: AuthRepository;
-  private tokenService: TokenService;
-  private navigationService: NavigationService;
+  // Quitamos tokenService y navigationService del constructor
+  // porque usaremos los métodos estáticos directamente.
 
   constructor(authRepository: AuthRepository) {
     this.authRepository = authRepository;
-    this.tokenService = new TokenService();
-    this.navigationService = new NavigationService();
   }
 
-  async execute(credentials: LoginCredentials): Promise<void> {
-    // 1. Llamar al login
-    const response = await this.authRepository.login(credentials);
+  async execute(credentials: LoginCredentials): Promise<Usuario> {
+    const { email, password } = credentials;
 
-    // 2. Validar token
-    const token = response?.data?.token;
+    if (!email || !password) {
+      throw new Error('Email y contraseña son requeridos');
+    }
+
+    // 1. Login - Usamos "as LoginResponse" para evitar el error de "any"
+    // Hacemos un casteo seguro para que TypeScript sepa qué esperar
+    const response = (await this.authRepository.login(credentials)) as LoginResponse;
+    console.log('✅ Respuesta del login:', response);
+
+    // 2. Extraer token
+    // Buscamos el token en ambas ubicaciones posibles
+    const token = response.token || response.data?.token;
+
     if (!token) {
       throw new Error('El servidor no devolvió token');
     }
 
-    // 3. Guardar token
-    this.authRepository.saveToken(token);
+    // 3. Guardar token - CAMBIO CLAVE: Usamos TokenService directamente (Mayúscula)
+    TokenService.setToken(token);
+    console.log('✅ Token guardado:', token);
 
-    // 4. Extraer usuario del token
-    const user = this.tokenService.extractUserFromToken(token);
+    // 4. Extraer y guardar usuario - CAMBIO CLAVE: TokenService estático
+    const user = TokenService.extractUserFromToken(token);
+    console.log('✅ Usuario extraído:', user);
+    
+    localStorage.setItem('user', JSON.stringify(user));
 
-    // 5. Guardar usuario
-    this.authRepository.saveUser(user);
-
-    // 6. Redirigir según rol
-    const redirectPath = this.navigationService.getRedirectPath(user);
-    this.navigationService.redirect(redirectPath);
+    // Devolvemos el usuario para que useLogin lo use
+    return user; 
   }
 }

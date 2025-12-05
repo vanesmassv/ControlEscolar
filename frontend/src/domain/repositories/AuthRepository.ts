@@ -1,4 +1,3 @@
-
 import type { LoginCredentials, LoginResponse, Usuario } from '../entities/auth';
 
 export interface AuthRepository {
